@@ -1,0 +1,16 @@
+{
+  "tailwindCSS.includeLanguages": {
+    "typescript": "typescript",
+    "typescriptreact": "typescriptreact"
+  },
+  "tailwindCSS.experimental.classRegex": [
+    "tw`([^`]*)`",
+    ["clsx\$$([^)]*)\$$", "(?:'|\"|`)([^']*)(?:'|\"|`)"],
+    ["classnames\$$([^)]*)\$$", "(?:'|\"|`)([^']*)(?:'|\"|`)"],
+    ["cva\$$([^)]*)\$$", "[\"'`]([^\"'`]*).*?[\"'`]"],
+    ["cn\$$([^)]*)\$$", "(?:'|\"|`)([^']*)(?:'|\"|`)"]
+  ],
+  "css.validate": false,
+  "scss.validate": false,
+  "less.validate": false
+}

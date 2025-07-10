@@ -1,7 +1,17 @@
 import { NextResponse } from "next/server";
 import type { PlayerStats } from "@/types";
 import axios from "axios";
-import sqlite3 from "sqlite3";
+import db from "@/lib/db";
+
+// Example helper
+function runAsync(sql: string, params: any[] = []): Promise<void> {
+  return new Promise((resolve, reject) => {
+    db.run(sql, params, function (err) {
+      if (err) reject(err);
+      else resolve();
+    });
+  });
+}
 
 // Load environment variable
 const API_KEY = process.env.SPORTRADAR_API_KEY;
@@ -11,17 +21,8 @@ const MAX_RETRIES = 3; // Max retries for rate limit
 const RETRY_DELAY_MS = 1000; // Delay between retries (1 second)
 
 // Initialize SQLite
-const db = new sqlite3.Database("./ncaamb_data.db");
-
-// Promisify db operations for convenience
-function runAsync(sql: string, params: any[] = []): Promise<void> {
-  return new Promise((resolve, reject) => {
-    db.run(sql, params, function (err) {
-      if (err) reject(err);
-      else resolve();
-    });
-  });
-}
+import path from "path";
+console.log("alexdebug database 4");
 
 function getAsync<T>(sql: string, params: any[] = []): Promise<T | undefined> {
   return new Promise((resolve, reject) => {

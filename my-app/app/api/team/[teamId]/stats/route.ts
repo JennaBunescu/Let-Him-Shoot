@@ -1,16 +1,12 @@
 import { NextResponse } from "next/server";
 import type { TeamStats } from "@/types";
 import axios from "axios";
-import sqlite3 from "sqlite3";
+import db from "@/lib/db";
 
 // Load environment variable
 const API_KEY = process.env.SPORTRADAR_API_KEY;
 const BASE_URL = "https://api.sportradar.com/ncaamb/trial/v8/en/seasons/2024/REG/teams";
 
-// Initialize SQLite
-const db = new sqlite3.Database("./ncaamb_data.db");
-
-// Promisify db operations for convenience
 function runAsync(sql: string, params: any[] = []): Promise<void> {
   return new Promise((resolve, reject) => {
     db.run(sql, params, function (err) {

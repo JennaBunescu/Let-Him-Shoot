@@ -1,14 +1,14 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { AlertTriangle, Shield } from "lucide-react"
+import { AlertTriangle, Shield, AlertCircle } from "lucide-react"
 
 interface ThreatAlertProps {
-  isLethalShooter: boolean
+  shooterStatus: "lethal" | "fifty-fifty" | "let-him-shoot"
   playerName: string
 }
 
-export default function ThreatAlert({ isLethalShooter, playerName }: ThreatAlertProps) {
+export default function ThreatAlert({ shooterStatus, playerName }: ThreatAlertProps) {
   const [isVisible, setIsVisible] = useState(true)
 
   useEffect(() => {
@@ -21,30 +21,38 @@ export default function ThreatAlert({ isLethalShooter, playerName }: ThreatAlert
 
   if (!isVisible) return null
 
+  const alertStyles = {
+    "lethal": {
+      bgClass: "bg-red-600/95",
+      icon: <AlertTriangle className="w-32 h-32 mx-auto animate-pulse" />,
+      title: "🔥 LETHAL SHOOTER!",
+      message: "CLOSE OUT HARD - HIGH THREAT!",
+    },
+    "fifty-fifty": {
+      bgClass: "bg-yellow-600/95",
+      icon: <AlertCircle className="w-32 h-32 mx-auto animate-pulse" />,
+      title: "⚠️ 50/50 SHOOTER!",
+      message: "MODERATE THREAT - CAN MAKE YOU PAY!",
+    },
+    "let-him-shoot": {
+      bgClass: "bg-green-600/95",
+      icon: <Shield className="w-32 h-32 mx-auto animate-pulse" />,
+      title: "✅ LET HIM SHOOT",
+      message: "LOW SHOOTING THREAT - FOCUS ELSEWHERE",
+    },
+  }
+
+  const { bgClass, icon, title, message } = alertStyles[shooterStatus]
+
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-center justify-center ${
-        isLethalShooter ? "bg-red-600/95" : "bg-green-600/95"
-      } backdrop-blur-sm animate-in fade-in duration-500`}
+      className={`fixed inset-0 z-50 flex items-center justify-center ${bgClass} backdrop-blur-sm animate-in fade-in duration-500`}
     >
       <div className="text-center text-white">
-        <div className="mb-6">
-          {isLethalShooter ? (
-            <AlertTriangle className="w-32 h-32 mx-auto animate-pulse" />
-          ) : (
-            <Shield className="w-32 h-32 mx-auto animate-pulse" />
-          )}
-        </div>
-
-        <h1 className="text-6xl md:text-8xl font-bold mb-4 animate-bounce">
-          {isLethalShooter ? "🔥 LETHAL SHOOTER!" : "✅ LET HIM SHOOT"}
-        </h1>
-
+        <div className="mb-6">{icon}</div>
+        <h1 className="text-6xl md:text-8xl font-bold mb-4 animate-bounce">{title}</h1>
         <p className="text-2xl md:text-4xl font-semibold mb-2">{playerName}</p>
-
-        <p className="text-xl md:text-2xl opacity-90">
-          {isLethalShooter ? "CLOSE OUT HARD - HIGH THREAT!" : "Low shooting threat - Focus elsewhere"}
-        </p>
+        <p className="text-xl md:text-2xl opacity-90">{message}</p>
       </div>
     </div>
   )

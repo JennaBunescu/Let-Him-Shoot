@@ -31,7 +31,7 @@ export default function TeamPage() {
     }> | null
   >(null)
   const [showAlert, setShowAlert] = useState(false)
-  const [isLethalShooter, setIsLethalShooter] = useState(false)
+  const [shooterStatus, setShooterStatus] = useState<"lethal" | "fifty-fifty" | "let-him-shoot" | null>(null)
   const [teamLoading, setTeamLoading] = useState(true)
   const [historicalLoading, setHistoricalLoading] = useState(false)
 
@@ -100,9 +100,16 @@ export default function TeamPage() {
       // Fetch historical stats for the selected player
       await fetchHistoricalStats(player.id)
 
-      // Determine if player is a lethal shooter
-      const isLethal = stats.threePtPercentage >= 35 && stats.threePtAttemptsPerGame >= 3
-      setIsLethalShooter(isLethal)
+      // Determine shooter status
+      let status: "lethal" | "fifty-fifty" | "let-him-shoot" | null = null
+      if (stats.threePtPercentage >= 36 && stats.threePtAttemptsPerGame >= 2) {
+        status = "lethal"
+      } else if (stats.threePtPercentage >= 30 && stats.threePtPercentage <= 35.9) {
+        status = "fifty-fifty"
+      } else if (stats.threePtPercentage < 30) {
+        status = "let-him-shoot"
+      }
+      setShooterStatus(status)
       setShowAlert(true)
 
       // Hide alert after 3 seconds
@@ -110,6 +117,7 @@ export default function TeamPage() {
     } catch (error) {
       console.error("Error fetching player stats:", error)
       setPlayerStats(null)
+      setShooterStatus(null)
     }
   }
 
@@ -124,7 +132,7 @@ export default function TeamPage() {
   if (!team) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 flex items-center justify-center">
-        <div className="text-white text-xl">Team not found</div>
+        <div className="text-white text-xl">Loading...</div>
       </div>
     )
   }
@@ -163,10 +171,10 @@ export default function TeamPage() {
                 {playerStats ? (
                   <PlayerStats player={selectedPlayer} stats={playerStats} teamStats={team} />
                 ) : (
-                  <div className="text-white text-lg">No player stats available</div>
+                  <div className="text-white text-lg">Loading...</div>
                 )}
                 {historicalLoading ? (
-                  <div className="text-white text-lg">Loading historical stats...</div>
+                  <div className="text-white text-lg">Loading...</div>
                 ) : historicalStats ? (
                   <HistoricalShootingChart
                     stats={historicalStats.find((data) => data.playerId === selectedPlayer.id) || {
@@ -180,7 +188,7 @@ export default function TeamPage() {
                     }}
                   />
                 ) : (
-                  <div className="text-white text-lg">No historical shooting stats available</div>
+                  <div className="text-white text-lg">Loading...</div>
                 )}
               </>
             )}
@@ -188,7 +196,9 @@ export default function TeamPage() {
         </div>
       </div>
 
-      {showAlert && <ThreatAlert isLethalShooter={isLethalShooter} playerName={selectedPlayer?.full_name || ""} />}
+      {showAlert && shooterStatus && (
+        <ThreatAlert shooterStatus={shooterStatus} playerName={selectedPlayer?.full_name || ""} />
+      )}
     </div>
   )
 }

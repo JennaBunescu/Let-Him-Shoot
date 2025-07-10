@@ -111,14 +111,24 @@ export default function TeamPage() {
       }
       setShooterStatus(status)
       setShowAlert(true)
-
-      // Hide alert after 3 seconds
-      setTimeout(() => setShowAlert(false), 3000)
     } catch (error) {
       console.error("Error fetching player stats:", error)
       setPlayerStats(null)
       setShooterStatus(null)
     }
+  }
+
+  useEffect(() => {
+    if (showAlert) {
+      const timer = setTimeout(() => {
+        setShowAlert(false)
+      }, 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [showAlert])
+
+  const handleClick = () => {
+    setShowAlert(false)
   }
 
   if (teamLoading) {
@@ -138,7 +148,7 @@ export default function TeamPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-black">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-black" onClick={handleClick}>
       <div className="container mx-auto px-4 py-8">
         {/* Header with back button */}
         <div className="flex items-center mb-8">
@@ -197,7 +207,11 @@ export default function TeamPage() {
       </div>
 
       {showAlert && shooterStatus && (
-        <ThreatAlert shooterStatus={shooterStatus} playerName={selectedPlayer?.full_name || ""} />
+        <ThreatAlert
+          key={selectedPlayer?.id || "no-player"}
+          shooterStatus={shooterStatus}
+          playerName={selectedPlayer?.full_name || ""}
+        />
       )}
     </div>
   )

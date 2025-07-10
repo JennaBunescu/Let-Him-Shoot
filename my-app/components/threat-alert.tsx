@@ -1,6 +1,5 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { AlertTriangle, Shield, AlertCircle } from "lucide-react"
 
 interface ThreatAlertProps {
@@ -9,18 +8,6 @@ interface ThreatAlertProps {
 }
 
 export default function ThreatAlert({ shooterStatus, playerName }: ThreatAlertProps) {
-  const [isVisible, setIsVisible] = useState(true)
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsVisible(false)
-    }, 3000)
-
-    return () => clearTimeout(timer)
-  }, [])
-
-  if (!isVisible) return null
-
   const alertStyles = {
     "lethal": {
       bgClass: "bg-red-600/95",
@@ -31,7 +18,7 @@ export default function ThreatAlert({ shooterStatus, playerName }: ThreatAlertPr
     "fifty-fifty": {
       bgClass: "bg-yellow-600/95",
       icon: <AlertCircle className="w-32 h-32 mx-auto animate-pulse" />,
-      title: "⚠️ 50/50 SHOOTER!",
+      title: "⚠️ 50/50",
       message: "MODERATE THREAT - CAN MAKE YOU PAY!",
     },
     "let-him-shoot": {

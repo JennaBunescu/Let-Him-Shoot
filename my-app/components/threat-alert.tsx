@@ -1,9 +1,9 @@
 "use client"
 
-import { AlertTriangle, Shield, AlertCircle } from "lucide-react"
+import { AlertTriangle, Shield, AlertCircle, HelpCircle } from "lucide-react"
 
 interface ThreatAlertProps {
-  shooterStatus: "lethal" | "fifty-fifty" | "let-him-shoot"
+  shooterStatus: "lethal" | "fifty-fifty" | "let-him-shoot" | "unknown"
   playerName: string
 }
 
@@ -18,7 +18,7 @@ export default function ThreatAlert({ shooterStatus, playerName }: ThreatAlertPr
     "fifty-fifty": {
       bgClass: "bg-yellow-600/95",
       icon: <AlertCircle className="w-32 h-32 mx-auto animate-pulse" />,
-      title: "⚠️ 50/50",
+      title: "⚠️ 50/50 SHOOTER!",
       message: "MODERATE THREAT - CAN MAKE YOU PAY!",
     },
     "let-him-shoot": {
@@ -26,6 +26,12 @@ export default function ThreatAlert({ shooterStatus, playerName }: ThreatAlertPr
       icon: <Shield className="w-32 h-32 mx-auto animate-pulse" />,
       title: "✅ LET HIM SHOOT",
       message: "LOW SHOOTING THREAT - FOCUS ELSEWHERE",
+    },
+    "unknown": {
+      bgClass: "bg-gray-600/95",
+      icon: <HelpCircle className="w-32 h-32 mx-auto animate-pulse" />,
+      title: "❓ UNKNOWN SHOOTER!",
+      message: "NO 2024 STATS - PROCEED WITH CAUTION!",
     },
   }
 

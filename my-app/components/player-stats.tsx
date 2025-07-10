@@ -12,7 +12,37 @@ interface PlayerStatsProps {
 }
 
 export default function PlayerStats({ player, stats, teamStats }: PlayerStatsProps) {
-  const isLethalShooter = stats.threePtPercentage >= 35 && stats.threePtAttemptsPerGame >= 3;
+  const shooterStatus: "lethal" | "fifty-fifty" | "let-him-shoot" | "unknown" = (() => {
+    if (stats.gamesPlayed === 0) {
+      return "unknown";
+    } else if (stats.threePtPercentage >= 36 && stats.threePtAttemptsPerGame >= 2) {
+      return "lethal";
+    } else if (stats.threePtPercentage >= 30 && stats.threePtPercentage <= 35.9) {
+      return "fifty-fifty";
+    }
+    return "let-him-shoot";
+  })();
+
+  const badgeStyles = {
+    lethal: {
+      className: "bg-red-600 text-white",
+      text: "🔥 LETHAL SHOOTER",
+    },
+    "fifty-fifty": {
+      className: "bg-yellow-600 text-white",
+      text: "⚠️ 50/50 SHOOTER",
+    },
+    "let-him-shoot": {
+      className: "bg-green-600 text-white",
+      text: "✅ LET HIM SHOOT",
+    },
+    unknown: {
+      className: "bg-gray-600 text-white",
+      text: "❓ UNKNOWN SHOOTER",
+    },
+  };
+
+  const { className, text } = badgeStyles[shooterStatus];
 
   return (
     <div className="space-y-6">
@@ -28,11 +58,8 @@ export default function PlayerStats({ player, stats, teamStats }: PlayerStatsPro
                 {player.position} • {player.experience || "N/A"}
               </p>
             </div>
-            <Badge
-              variant={isLethalShooter ? "destructive" : "secondary"}
-              className={`text-lg px-4 py-2 ${isLethalShooter ? "bg-red-600 text-white" : "bg-orange-600 text-white"}`}
-            >
-              {isLethalShooter ? "🔥 LETHAL SHOOTER" : "✅ LET HIM SHOOT"}
+            <Badge variant="secondary" className={`text-lg px-4 py-2 ${className}`}>
+              {text}
             </Badge>
           </div>
         </CardHeader>

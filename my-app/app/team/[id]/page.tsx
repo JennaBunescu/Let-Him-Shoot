@@ -31,7 +31,7 @@ export default function TeamPage() {
     }> | null
   >(null)
   const [showAlert, setShowAlert] = useState(false)
-  const [shooterStatus, setShooterStatus] = useState<"lethal" | "fifty-fifty" | "let-him-shoot" | null>(null)
+  const [shooterStatus, setShooterStatus] = useState<"lethal" | "fifty-fifty" | "let-him-shoot" | "unknown" | null>(null)
   const [teamLoading, setTeamLoading] = useState(true)
   const [historicalLoading, setHistoricalLoading] = useState(false)
 
@@ -101,8 +101,10 @@ export default function TeamPage() {
       await fetchHistoricalStats(player.id)
 
       // Determine shooter status
-      let status: "lethal" | "fifty-fifty" | "let-him-shoot" | null = null
-      if (stats.threePtPercentage >= 36 && stats.threePtAttemptsPerGame >= 2) {
+      let status: "lethal" | "fifty-fifty" | "let-him-shoot" | "unknown" | null = null
+      if (stats.gamesPlayed === 0) {
+        status = "unknown"
+      } else if (stats.threePtPercentage >= 36 && stats.threePtAttemptsPerGame >= 2) {
         status = "lethal"
       } else if (stats.threePtPercentage >= 30 && stats.threePtPercentage <= 35.9) {
         status = "fifty-fifty"

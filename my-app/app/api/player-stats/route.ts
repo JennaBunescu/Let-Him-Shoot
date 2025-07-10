@@ -3,7 +3,7 @@ import type { PlayerStats } from "@/types";
 import axios from "axios";
 import db from "@/lib/db";
 
-// Example helper
+// Helper to execute SQLite queries
 function runAsync(sql: string, params: any[] = []): Promise<void> {
   return new Promise((resolve, reject) => {
     db.run(sql, params, function (err) {
@@ -13,17 +13,7 @@ function runAsync(sql: string, params: any[] = []): Promise<void> {
   });
 }
 
-// Load environment variable
-const API_KEY = process.env.SPORTRADAR_API_KEY;
-const BASE_URL = "https://api.sportradar.com/ncaamb/trial/v8/en/seasons/2024/REG/teams";
-const CACHE_TTL_SECONDS = 60 * 60; // 1 hour cache TTL
-const MAX_RETRIES = 3; // Max retries for rate limit
-const RETRY_DELAY_MS = 1000; // Delay between retries (1 second)
-
-// Initialize SQLite
-import path from "path";
-console.log("alexdebug database 4");
-
+// Helper to get SQLite data
 function getAsync<T>(sql: string, params: any[] = []): Promise<T | undefined> {
   return new Promise((resolve, reject) => {
     db.get(sql, params, (err, row) => {
@@ -33,15 +23,26 @@ function getAsync<T>(sql: string, params: any[] = []): Promise<T | undefined> {
   });
 }
 
+// Load environment variables
+const API_KEY = process.env.SPORTRADAR_API_KEY;
+const BASE_URL = "https://api.sportradar.com/ncaamb/trial/v8/en/players";
+const CACHE_TTL_SECONDS = 60 * 60; // 1 hour cache TTL
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 1000;
+
+// Initialize SQLite
+console.log("alexdebug database 4");
+
 // Helper function for retrying API calls
 async function fetchWithRetry(url: string, options: any, retries: number = MAX_RETRIES): Promise<any> {
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       const response = await axios.get(url, options);
+      console.log(`alexdebug PLAYER_STATS 11: Successfully fetched data for ${url}`);
       return response;
     } catch (apiError: any) {
+      console.warn(`alexdebug PLAYER_STATS 12: Rate limited (attempt ${attempt}/${retries}), retrying after ${RETRY_DELAY_MS * attempt}ms...`);
       if (apiError.response?.status === 429 && attempt < retries) {
-        console.warn(`alexdebug PLAYER_STATS 10: Rate limited (attempt ${attempt}/${retries}), retrying after ${RETRY_DELAY_MS}ms...`);
         await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS * attempt));
         continue;
       }
@@ -84,12 +85,16 @@ export async function GET(request: Request) {
       [playerId, teamId]
     );
 
-    // Check if cache is valid (not expired)
+    // Check if cache is valid (not expired) and not all zeros
     const now = Math.floor(Date.now() / 1000);
     if (cachedRow && cachedRow.cached_at + CACHE_TTL_SECONDS > now) {
-      console.log("alexdebug PLAYER_STATS 6: Returning cached stats for playerId:", playerId);
       const cachedStats: PlayerStats = JSON.parse(cachedRow.data);
-      return NextResponse.json(cachedStats);
+      // Force refresh if cached stats are all zeros (likely stale or incorrect)
+      if (cachedStats.threePtPercentage !== 0 || cachedStats.pointsPerGame !== 0) {
+        console.log("alexdebug PLAYER_STATS 6: Returning cached stats for playerId:", playerId);
+        return NextResponse.json(cachedStats);
+      }
+      console.log("alexdebug PLAYER_STATS 6: Cached stats are all zeros for playerId:", playerId, "forcing refresh");
     }
 
     // Step 3: Validate playerId in team_rosters table
@@ -111,18 +116,18 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Server configuration error" }, { status: 500 });
     }
 
-    // Step 5: Fetch from Sportradar with retry
-    console.log("alexdebug PLAYER_STATS 11: Fetching stats for teamId:", teamId, "from Sportradar...");
+    // Step 5: Fetch from Sportradar player profile API
+    console.log("alexdebug PLAYER_STATS 11: Fetching stats for playerId:", playerId, "from Sportradar...");
     let response;
     try {
-      response = await fetchWithRetry(`${BASE_URL}/${teamId}/statistics.json`, {
+      response = await fetchWithRetry(`${BASE_URL}/${playerId}/profile.json`, {
         headers: {
           accept: "application/json",
           "x-api-key": API_KEY,
         },
       });
     } catch (apiError: any) {
-      console.error("alexdebug PLAYER_STATS 12: Sportradar API error:", apiError.message, "Status:", apiError.response?.status);
+      console.error("alexdebug PLAYER_STATS 12: Sportradar API error for playerId:", playerId, apiError.message, "Status:", apiError.response?.status);
       // Attempt to return stale cache if available
       if (cachedRow) {
         console.log("alexdebug PLAYER_STATS 12: Falling back to stale cache for playerId:", playerId);
@@ -136,21 +141,16 @@ export async function GET(request: Request) {
     }
 
     console.log("alexdebug PLAYER_STATS 13: Sportradar API response status:", response.status);
-    const playersRaw = response.data.players || [];
+    const playerData = response.data;
+    console.log("alexdebug PLAYER_STATS 13.1: Raw playerData:", JSON.stringify(playerData, null, 2));
 
-    // Step 6: Validate response data
-    if (!Array.isArray(playersRaw)) {
-      console.error("alexdebug PLAYER_STATS 14: Invalid Sportradar response: players array missing");
-      return NextResponse.json({ error: "Invalid data from Sportradar" }, { status: 500 });
-    }
-
-    // Step 7: Find player stats
-    const playerRaw = playersRaw.find((p: any) => p.id === playerId);
+    // Step 6: Find 2024 REG season stats
+    const season2024 = playerData.seasons?.find((season: any) => season.year === 2024 && season.type === "REG");
+    console.log("alexdebug PLAYER_STATS 13.2: 2024 REG season data:", JSON.stringify(season2024, null, 2));
     let playerStats: PlayerStats;
 
-    if (!playerRaw) {
-      console.log("alexdebug PLAYER_STATS 15: Player not found in 2024 stats for playerId:", playerId, "returning default stats");
-      // Player is in roster but not in stats, return default stats
+    if (!season2024) {
+      console.log("alexdebug PLAYER_STATS 14: No 2024 REG stats found for playerId:", playerId, "returning default stats");
       playerStats = {
         playerId,
         gamesPlayed: 0,
@@ -176,45 +176,47 @@ export async function GET(request: Request) {
         gameLog: [],
       };
     } else {
-      console.log("alexdebug PLAYER_STATS 15: Found playerRaw:", JSON.stringify(playerRaw, null, 2));
-      // Format into PlayerStats with safe defaults
+      console.log("alexdebug PLAYER_STATS 14: Found 2024 REG stats for playerId:", playerId);
+      const teamStats = season2024.teams?.[0] || {};
+      console.log("alexdebug PLAYER_STATS 14.1: Team stats for 2024:", JSON.stringify(teamStats, null, 2));
       playerStats = {
         playerId,
-        gamesPlayed: playerRaw.total?.games_played ?? 0,
-        minutesPerGame: playerRaw.average?.minutes ?? 0,
-        pointsPerGame: playerRaw.average?.points ?? 0,
-        reboundsPerGame: playerRaw.average?.rebounds ?? 0,
-        assistsPerGame: playerRaw.average?.assists ?? 0,
-        stealsPerGame: playerRaw.average?.steals ?? 0,
-        blocksPerGame: playerRaw.average?.blocks ?? 0,
-        turnoversPerGame: playerRaw.average?.turnovers ?? 0,
-        personalFoulsPerGame: playerRaw.average?.personal_fouls ?? 0,
-        threePtPercentage: (playerRaw.total?.three_points_pct ?? 0) * 100,
-        threePtAttemptsPerGame: playerRaw.average?.three_points_att ?? 0,
-        threePtMadePerGame: playerRaw.average?.three_points_made ?? 0,
-        fgPercentage: (playerRaw.total?.field_goals_pct ?? 0) * 100,
-        fgAttemptsPerGame: playerRaw.average?.field_goals_att ?? 0,
-        fgMadePerGame: playerRaw.average?.field_goals_made ?? 0,
-        ftPercentage: (playerRaw.total?.free_throws_pct ?? 0) * 100,
-        ftAttemptsPerGame: playerRaw.average?.free_throws_att ?? 0,
-        ftMadePerGame: playerRaw.average?.free_throws_made ?? 0,
-        trueShootingPercentage: (playerRaw.total?.true_shooting_pct ?? 0) * 100,
-        efficiency: playerRaw.total?.efficiency ?? 0,
-        gameLog: [], // TODO: Fetch game log data if available from Sportradar
+        gamesPlayed: teamStats.total?.games_played ?? 0,
+        minutesPerGame: teamStats.average?.minutes ?? 0,
+        pointsPerGame: teamStats.average?.points ?? 0,
+        reboundsPerGame: teamStats.average?.rebounds ?? 0,
+        assistsPerGame: teamStats.average?.assists ?? 0,
+        stealsPerGame: teamStats.average?.steals ?? 0,
+        blocksPerGame: teamStats.average?.blocks ?? 0,
+        turnoversPerGame: teamStats.average?.turnovers ?? 0,
+        personalFoulsPerGame: teamStats.average?.personal_fouls ?? 0,
+        threePtPercentage: (teamStats.total?.three_points_pct ?? 0) * 100,
+        threePtAttemptsPerGame: teamStats.average?.three_points_att ?? 0,
+        threePtMadePerGame: teamStats.average?.three_points_made ?? 0,
+        fgPercentage: (teamStats.total?.field_goals_pct ?? 0) * 100,
+        fgAttemptsPerGame: teamStats.average?.field_goals_att ?? 0,
+        fgMadePerGame: teamStats.average?.field_goals_made ?? 0,
+        ftPercentage: (teamStats.total?.free_throws_pct ?? 0) * 100,
+        ftAttemptsPerGame: teamStats.average?.free_throws_att ?? 0,
+        ftMadePerGame: teamStats.average?.free_throws_made ?? 0,
+        trueShootingPercentage: (teamStats.total?.true_shooting_pct ?? 0) * 100,
+        efficiency: teamStats.total?.efficiency ?? 0,
+        gameLog: [],
       };
     }
 
-    // Step 8: Store in SQLite with timestamp
-    console.log("alexdebug PLAYER_STATS 16: Inserting stats for playerId:", playerId, "teamId:", teamId);
+    // Step 7: Store in SQLite with timestamp
+    console.log("alexdebug PLAYER_STATS 15: Inserting stats for playerId:", playerId, "teamId:", teamId);
     await runAsync(
       "INSERT OR REPLACE INTO player_stats (player_id, team_id, data, cached_at) VALUES (?, ?, ?, ?)",
       [playerId, teamId, JSON.stringify(playerStats), now]
     );
-    console.log("alexdebug PLAYER_STATS 17: Cached stats for playerId:", playerId);
+    console.log("alexdebug PLAYER_STATS 16: Cached stats for playerId:", playerId);
+    console.log("alexdebug PLAYER_STATS 16.1: Cached playerStats:", JSON.stringify(playerStats, null, 2));
 
     return NextResponse.json(playerStats);
   } catch (error: any) {
-    console.error("alexdebug PLAYER_STATS 18: General error:", error.message);
+    console.error("alexdebug PLAYER_STATS 17: General error:", error.message);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

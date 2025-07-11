@@ -20,16 +20,15 @@ export default function TeamStats({ team }: TeamStatsProps) {
     const fetchTeamStats = async () => {
       setLoading(true)
       try {
-        console.log("alexdebug TEAM_STATS 1: Fetching stats for teamId:", team.id)
+        console.log("Fetching stats for teamId:", team.id)
         const response = await fetch(`/api/team/${team.id}/stats`)
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`)
         }
         const data: TeamStats = await response.json()
-        console.log("alexdebug TEAM_STATS 2: Fetched stats:", data)
         setStats(data)
       } catch (err: any) {
-        console.error("alexdebug TEAM_STATS 3: Error fetching stats:", err.message)
+        console.error("Error fetching stats:", err.message)
         setError("Failed to load team stats")
       } finally {
         setLoading(false)

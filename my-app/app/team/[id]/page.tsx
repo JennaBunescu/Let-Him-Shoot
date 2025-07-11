@@ -108,22 +108,27 @@ export default function TeamPage() {
         `Stats for ${player.full_name}: raw threePtPercentage=${stats.threePtPercentage} (type: ${typeof stats.threePtPercentage}), parsed=${parsedThreePtPercentage}, raw threePtAttemptsPerGame=${stats.threePtAttemptsPerGame} (type: ${typeof stats.threePtAttemptsPerGame}), parsed=${parsedThreePtAttemptsPerGame}, gamesPlayed=${stats.gamesPlayed}`
       )
 
-      if (stats.gamesPlayed === 0) {
-        status = "unknown"
-      } else if (
+      if (
         parsedThreePtPercentage == null ||
         isNaN(parsedThreePtPercentage) ||
         parsedThreePtAttemptsPerGame == null ||
         isNaN(parsedThreePtAttemptsPerGame)
       ) {
-        status = "unknown"
-        console.log(`Invalid stats for ${player.full_name}: parsedThreePtPercentage=${parsedThreePtPercentage}, parsedThreePtAttemptsPerGame=${parsedThreePtAttemptsPerGame}`)
-      } else if (parsedThreePtPercentage >= 36 && parsedThreePtAttemptsPerGame >= 2) {
-        status = "lethal"
-      } else if ((parsedThreePtPercentage >= 30 && parsedThreePtPercentage <= 35.9) || (parsedThreePtPercentage >= 36 && parsedThreePtAttemptsPerGame < 2)) {
-        status = "fifty-fifty"
+        status = "unknown";
+        console.log(`Invalid stats for ${player.full_name}: parsedThreePtPercentage=${parsedThreePtPercentage}, parsedThreePtAttemptsPerGame=${parsedThreePtAttemptsPerGame}`);
+      } else if (parsedThreePtAttemptsPerGame <= 0.5) {
+        status = "unknown";
+      } else if (parsedThreePtPercentage >= 37 && parsedThreePtAttemptsPerGame >= 2) {
+        status = "lethal";
+      } else if (
+        (parsedThreePtPercentage >= 30 && parsedThreePtPercentage < 37 && parsedThreePtAttemptsPerGame > 0.5) ||
+        (parsedThreePtPercentage >= 37 && parsedThreePtAttemptsPerGame < 2)
+      ) {
+        status = "fifty-fifty";
+      } else if (parsedThreePtPercentage < 30 && parsedThreePtAttemptsPerGame > 0.5) {
+        status = "let-him-shoot";
       } else {
-        status = "let-him-shoot"
+        status = "unknown"; // Just in case
       }
       console.log(`Shooter status for ${player.full_name}: ${status}`)
       setShooterStatus(status)

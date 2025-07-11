@@ -12,26 +12,26 @@ export default function ThreatAlert({ shooterStatus, playerName }: ThreatAlertPr
     "lethal": {
       bgClass: "bg-red-600/95",
       icon: <AlertTriangle className="w-32 h-32 mx-auto animate-pulse" />,
-      title: "🔥 LETHAL SHOOTER!",
-      message: "CLOSE OUT HARD - HIGH THREAT!",
+      title: "LETHAL SHOOTER",
+      message: "HAND DOWN MAN DOWN",
     },
     "fifty-fifty": {
       bgClass: "bg-yellow-600/95",
       icon: <AlertCircle className="w-32 h-32 mx-auto animate-pulse" />,
-      title: "⚠️ 50/50 SHOOTER!",
-      message: "MODERATE THREAT - CAN MAKE YOU PAY!",
+      title: "50/50 SHOOTER",
+      message: "MAKE OR MISS — FLIP A COIN",
     },
     "let-him-shoot": {
       bgClass: "bg-green-600/95",
       icon: <Shield className="w-32 h-32 mx-auto animate-pulse" />,
-      title: "✅ LET HIM SHOOT",
+      title: "LET HIM SHOOT",
       message: "LOW SHOOTING THREAT - FOCUS ELSEWHERE",
     },
     "unknown": {
       bgClass: "bg-gray-600/95",
       icon: <HelpCircle className="w-32 h-32 mx-auto animate-pulse" />,
-      title: "❓ UNKNOWN SHOOTER!",
-      message: "NO 2024 STATS - PROCEED WITH CAUTION!",
+      title: "UNIDENTIFIED SHOOTER",
+      message: "NEEDS MORE TAPE",
     },
   }
 

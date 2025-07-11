@@ -15,7 +15,7 @@ export default function Home() {
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h1 className="text-6xl md:text-8xl text-white font-medium font-serif mb-6">🏀 Let Him Shoot</h1>
-          <p className="text-xl text-gray-300 font-light">Real-time perimeter shooting threat analysis</p>
+          <p className="text-xl text-gray-300 font-light">Perimeter shooting threat analysis</p>
         </div>
 
         <div className="flex justify-center">

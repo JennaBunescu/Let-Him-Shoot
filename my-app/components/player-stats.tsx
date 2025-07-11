@@ -13,11 +13,11 @@ interface PlayerStatsProps {
 
 export default function PlayerStats({ player, stats, teamStats }: PlayerStatsProps) {
   const shooterStatus: "lethal" | "fifty-fifty" | "let-him-shoot" | "unknown" = (() => {
-    if (stats.gamesPlayed === 0) {
+    if (stats.threePtAttemptsPerGame <= 0.5) {
       return "unknown";
-    } else if (stats.threePtPercentage >= 36 && stats.threePtAttemptsPerGame >= 2) {
+    } else if (stats.threePtPercentage >= 37 && stats.threePtAttemptsPerGame >= 2) {
       return "lethal";
-    } else if ((stats.threePtPercentage >= 30 && stats.threePtPercentage < 36) || (stats.threePtPercentage >= 36 && stats.threePtAttemptsPerGame < 2) ) {
+    } else if ((stats.threePtPercentage >= 30 && stats.threePtPercentage < 37 && stats.threePtAttemptsPerGame > 0.5) || (stats.threePtPercentage >= 37 && stats.threePtAttemptsPerGame < 2) ) {
       return "fifty-fifty";
     }
     return "let-him-shoot";
@@ -26,19 +26,19 @@ export default function PlayerStats({ player, stats, teamStats }: PlayerStatsPro
   const badgeStyles = {
     lethal: {
       className: "bg-red-600 text-white",
-      text: "🔥 LETHAL SHOOTER",
+      text: "LETHAL SHOOTER",
     },
     "fifty-fifty": {
       className: "bg-yellow-600 text-white",
-      text: "⚠️ 50/50 SHOOTER",
+      text: "50/50 SHOOTER",
     },
     "let-him-shoot": {
       className: "bg-green-600 text-white",
-      text: "✅ LET HIM SHOOT",
+      text: "LET HIM SHOOT",
     },
     unknown: {
       className: "bg-gray-600 text-white",
-      text: "❓ UNKNOWN SHOOTER",
+      text: "UNIDENTIFIED",
     },
   };
 

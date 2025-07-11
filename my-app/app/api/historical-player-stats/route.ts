@@ -1,3 +1,4 @@
+// route.ts
 import { NextResponse } from "next/server";
 import axios from "axios";
 import db from "@/lib/db";
@@ -83,7 +84,6 @@ export async function GET(request: Request) {
 
     const now = Math.floor(Date.now() / 1000);
     const currentYear = 2024;
-    const targetYears = [currentYear, currentYear - 1, currentYear - 2];
 
     const cachedRow = await getAsync<{
       year1: number;
@@ -124,11 +124,11 @@ export async function GET(request: Request) {
       console.error("Sportradar API error for playerId:", playerId, apiError.message);
       const defaultStats = {
         playerId,
-        year1: targetYears[0],
+        year1: currentYear,
         threePtPctYear1: 0,
-        year2: targetYears[1],
+        year2: currentYear - 1,
         threePtPctYear2: 0,
-        year3: targetYears[2],
+        year3: currentYear - 2,
         threePtPctYear3: 0,
       };
       await runAsync(
@@ -141,31 +141,41 @@ export async function GET(request: Request) {
 
     const regSeasons = playerData.seasons
       ?.filter((season: any) => season.type === "REG")
-      ?.sort((a: any, b: any) => b.year - a.year)
+      ?.sort((a: any, b: any) => b.year - a.year) // Sort descending to prioritize recent years
       ?.slice(0, 3) || [];
 
     const stats = {
       playerId,
-      year1: targetYears[0],
+      year1: currentYear,
       threePtPctYear1: 0,
-      year2: targetYears[1],
+      year2: currentYear - 1,
       threePtPctYear2: 0,
-      year3: targetYears[2],
+      year3: currentYear - 2,
       threePtPctYear3: 0,
     };
 
-    regSeasons.forEach((season: any, index: number) => {
-      if (index === 0) {
-        stats.year1 = season.year;
-        stats.threePtPctYear1 = (season.teams?.[0]?.total?.three_points_pct ?? 0) * 100;
-      } else if (index === 1) {
-        stats.year2 = season.year;
-        stats.threePtPctYear2 = (season.teams?.[0]?.total?.three_points_pct ?? 0) * 100;
-      } else if (index === 2) {
-        stats.year3 = season.year;
-        stats.threePtPctYear3 = (season.teams?.[0]?.total?.three_points_pct ?? 0) * 100;
-      }
-    });
+    if (regSeasons.length === 1) {
+      stats.year1 = regSeasons[0].year;
+      stats.threePtPctYear1 = (regSeasons[0].teams?.[0]?.total?.three_points_pct ?? 0) * 100;
+      stats.year2 = regSeasons[0].year - 1;
+      stats.threePtPctYear2 = 0;
+      stats.year3 = regSeasons[0].year - 2;
+      stats.threePtPctYear3 = 0;
+    } else if (regSeasons.length === 2) {
+      stats.year1 = regSeasons[0].year;
+      stats.threePtPctYear1 = (regSeasons[0].teams?.[0]?.total?.three_points_pct ?? 0) * 100;
+      stats.year2 = regSeasons[1].year;
+      stats.threePtPctYear2 = (regSeasons[1].teams?.[0]?.total?.three_points_pct ?? 0) * 100;
+      stats.year3 = regSeasons[1].year - 1;
+      stats.threePtPctYear3 = 0;
+    } else if (regSeasons.length === 3) {
+      stats.year1 = regSeasons[0].year;
+      stats.threePtPctYear1 = (regSeasons[0].teams?.[0]?.total?.three_points_pct ?? 0) * 100;
+      stats.year2 = regSeasons[1].year;
+      stats.threePtPctYear2 = (regSeasons[1].teams?.[0]?.total?.three_points_pct ?? 0) * 100;
+      stats.year3 = regSeasons[2].year;
+      stats.threePtPctYear3 = (regSeasons[2].teams?.[0]?.total?.three_points_pct ?? 0) * 100;
+    }
 
     await runAsync(
       `INSERT OR REPLACE INTO historical_player_stats (player_id, team_id, year1, three_pt_pct_year1, year2, three_pt_pct_year2, year3, three_pt_pct_year3, cached_at)

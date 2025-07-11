@@ -17,19 +17,10 @@ interface HistoricalShootingChartProps {
 
 export default function HistoricalShootingChart({ stats }: HistoricalShootingChartProps) {
   const data = [
-    {
-      name: `${stats.year3}`,
-      percentage: stats.threePtPctYear3,
-    },
-    {
-      name: `${stats.year2}`,
-      percentage: stats.threePtPctYear2,
-    },
-    {
-      name: `${stats.year1}`,
-      percentage: stats.threePtPctYear1,
-    },
-  ]
+    { name: `${stats.year3}`, percentage: stats.threePtPctYear3 },
+    { name: `${stats.year2}`, percentage: stats.threePtPctYear2 },
+    { name: `${stats.year1}`, percentage: stats.threePtPctYear1 },
+  ].sort((a, b) => parseInt(a.name) - parseInt(b.name));
 
   return (
     <Card className="bg-white/10 backdrop-blur-md border-white/20">

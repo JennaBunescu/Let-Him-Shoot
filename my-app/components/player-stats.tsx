@@ -17,7 +17,7 @@ export default function PlayerStats({ player, stats, teamStats }: PlayerStatsPro
       return "unknown";
     } else if (stats.threePtPercentage >= 36 && stats.threePtAttemptsPerGame >= 2) {
       return "lethal";
-    } else if (stats.threePtPercentage >= 30 && stats.threePtPercentage <= 35.9) {
+    } else if ((stats.threePtPercentage >= 30 && stats.threePtPercentage < 36) || (stats.threePtPercentage >= 36 && stats.threePtAttemptsPerGame < 2) ) {
       return "fifty-fifty";
     }
     return "let-him-shoot";

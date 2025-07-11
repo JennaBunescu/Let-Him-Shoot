@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -7,8 +8,6 @@
     text-wrap: balance;
   }
 }
-
-
 
 @layer base {
   :root {
@@ -66,13 +65,13 @@
   }
 }
 
-
-
 @layer base {
   * {
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
+    background: #0f172a !important; /* slate-900 for overscroll */
+    background-image: linear-gradient(to bottom right, #0f172a, #1f2937, #000000) !important; /* Matches bg-gradient-to-br from-slate-900 via-gray-900 to-black */
   }
 }

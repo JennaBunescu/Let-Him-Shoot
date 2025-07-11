@@ -94,29 +94,45 @@ export default function TeamPage() {
         throw new Error(`Player stats fetch failed: ${statsResponse.status}`)
       }
       const stats: PlayerStatsType = await statsResponse.json()
-      console.log("Player stats fetched:", JSON.stringify(stats, null, 2))
+      console.log("Player stats fetched for", player.full_name, ":", JSON.stringify(stats, null, 2))
       setPlayerStats(stats)
 
       // Fetch historical stats for the selected player
       await fetchHistoricalStats(player.id)
 
-      // Determine shooter status
-      let status: "lethal" | "fifty-fifty" | "let-him-shoot" | "unknown" | null = null
+      // Determine shooter status (aligned with PlayerStats.tsx)
+      let status: "lethal" | "fifty-fifty" | "let-him-shoot" | "unknown"
+      const parsedThreePtPercentage = parseFloat(String(stats.threePtPercentage))
+      const parsedThreePtAttemptsPerGame = parseFloat(String(stats.threePtAttemptsPerGame))
+      console.log(
+        `Stats for ${player.full_name}: raw threePtPercentage=${stats.threePtPercentage} (type: ${typeof stats.threePtPercentage}), parsed=${parsedThreePtPercentage}, raw threePtAttemptsPerGame=${stats.threePtAttemptsPerGame} (type: ${typeof stats.threePtAttemptsPerGame}), parsed=${parsedThreePtAttemptsPerGame}, gamesPlayed=${stats.gamesPlayed}`
+      )
+
       if (stats.gamesPlayed === 0) {
         status = "unknown"
-      } else if (stats.threePtPercentage >= 36 && stats.threePtAttemptsPerGame >= 2) {
+      } else if (
+        parsedThreePtPercentage == null ||
+        isNaN(parsedThreePtPercentage) ||
+        parsedThreePtAttemptsPerGame == null ||
+        isNaN(parsedThreePtAttemptsPerGame)
+      ) {
+        status = "unknown"
+        console.log(`Invalid stats for ${player.full_name}: parsedThreePtPercentage=${parsedThreePtPercentage}, parsedThreePtAttemptsPerGame=${parsedThreePtAttemptsPerGame}`)
+      } else if (parsedThreePtPercentage >= 36 && parsedThreePtAttemptsPerGame >= 2) {
         status = "lethal"
-      } else if (stats.threePtPercentage >= 30 && stats.threePtPercentage <= 35.9) {
+      } else if ((parsedThreePtPercentage >= 30 && parsedThreePtPercentage <= 35.9) || (parsedThreePtPercentage >= 36 && parsedThreePtAttemptsPerGame < 2)) {
         status = "fifty-fifty"
-      } else if (stats.threePtPercentage < 30) {
+      } else {
         status = "let-him-shoot"
       }
+      console.log(`Shooter status for ${player.full_name}: ${status}`)
       setShooterStatus(status)
       setShowAlert(true)
     } catch (error) {
-      console.error("Error fetching player stats:", error)
+      console.error("Error fetching player stats for", player.full_name, ":", error)
       setPlayerStats(null)
-      setShooterStatus(null)
+      setShooterStatus("unknown")
+      setShowAlert(true)
     }
   }
 
@@ -135,7 +151,7 @@ export default function TeamPage() {
 
   if (teamLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-black flex items-center justify-center">
         <div className="text-white text-xl">Loading team...</div>
       </div>
     )
@@ -143,7 +159,7 @@ export default function TeamPage() {
 
   if (!team) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-black flex items-center justify-center">
         <div className="text-white text-xl">Loading...</div>
       </div>
     )

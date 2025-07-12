@@ -49,7 +49,6 @@ export async function GET() {
       console.log("jennadebug HERE 3: Found", cachedRows.length, "cached teams");
       const cachedTeams: Team[] = cachedRows.map((row) => JSON.parse(row.data));
       console.log("jennadebug HERE 4: Returning", cachedTeams.length, "teams from cache");
-      console.log(cachedTeams.find((team) => team.name.toLowerCase().includes("duke")));
       return NextResponse.json(cachedTeams);
     }
 
@@ -92,7 +91,6 @@ export async function GET() {
     }));
 
     console.log("jennadebug HERE 8: Processed", teamData.length, "teams");
-    console.log(teamData.find((team) => team.name.toLowerCase().includes("duke")));
 
     // Step 6: Store in SQLite safely with awaits to avoid UNIQUE constraint errors
     await runAsync("DELETE FROM teams"); // Clear old data

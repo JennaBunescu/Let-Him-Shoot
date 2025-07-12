@@ -19,13 +19,13 @@ export default function ThreatAlert({ shooterStatus, playerName }: ThreatAlertPr
       bgClass: "bg-yellow-600/95",
       icon: <AlertCircle className="w-32 h-32 mx-auto animate-pulse" />,
       title: "50/50 SHOOTER",
-      message: "MAKE OR MISS — FLIP A COIN",
+      message: "FLIP A COIN",
     },
     "let-him-shoot": {
       bgClass: "bg-green-600/95",
       icon: <Shield className="w-32 h-32 mx-auto animate-pulse" />,
       title: "LET HIM SHOOT",
-      message: "LOW SHOOTING THREAT - FOCUS ELSEWHERE",
+      message: "LOW SHOOTING THREAT",
     },
     "unknown": {
       bgClass: "bg-gray-600/95",

@@ -30,6 +30,7 @@ export default function TeamPage() {
       threePtPctYear3: number;
     }> | null
   >(null)
+  const [netRank, setNetRank] = useState<number | null>(null)
   const [showAlert, setShowAlert] = useState(false)
   const [shooterStatus, setShooterStatus] = useState<"lethal" | "fifty-fifty" | "let-him-shoot" | "unknown" | null>(null)
   const [teamLoading, setTeamLoading] = useState(true)
@@ -42,16 +43,30 @@ export default function TeamPage() {
   const fetchTeam = async () => {
     try {
       setTeamLoading(true)
-      const response = await fetch("/api/teams")
-      if (!response.ok) {
-        throw new Error(`Failed to fetch teams: ${response.status}`)
+      const [teamsResponse, rankingsResponse] = await Promise.all([
+        fetch("/api/teams"),
+        fetch(`/api/rankings`)
+      ]);
+
+      if (!teamsResponse.ok) {
+        throw new Error(`Failed to fetch teams: ${teamsResponse.status}`)
       }
-      const teams = await response.json()
+      const teams = await teamsResponse.json()
       const foundTeam = teams.find((t: Team) => t.id === teamId)
       setTeam(foundTeam || null)
+
+      if (rankingsResponse.ok) {
+        const rankings = await rankingsResponse.json()
+        const teamRanking = rankings.find((r: { team_id: string; net_rank: number | null }) => r.team_id === teamId)
+        setNetRank(teamRanking?.net_rank || null)
+      } else {
+        console.warn("Failed to fetch rankings:", rankingsResponse.status)
+        setNetRank(null)
+      }
     } catch (error) {
-      console.error("Error fetching team:", error)
+      console.error("Error fetching team or rankings:", error)
       setTeam(null)
+      setNetRank(null)
     } finally {
       setTeamLoading(false)
     }
@@ -88,7 +103,6 @@ export default function TeamPage() {
     console.log("Selected player:", player.id, player.full_name)
 
     try {
-      // Fetch current season stats
       const statsResponse = await fetch(`/api/player-stats?playerId=${player.id}&teamId=${teamId}`)
       if (!statsResponse.ok) {
         throw new Error(`Player stats fetch failed: ${statsResponse.status}`)
@@ -97,10 +111,8 @@ export default function TeamPage() {
       console.log("Player stats fetched for", player.full_name, ":", JSON.stringify(stats, null, 2))
       setPlayerStats(stats)
 
-      // Fetch historical stats for the selected player
       await fetchHistoricalStats(player.id)
 
-      // Determine shooter status (aligned with PlayerStats.tsx)
       let status: "lethal" | "fifty-fifty" | "let-him-shoot" | "unknown"
       const parsedThreePtPercentage = parseFloat(String(stats.threePtPercentage))
       const parsedThreePtAttemptsPerGame = parseFloat(String(stats.threePtAttemptsPerGame))
@@ -128,7 +140,7 @@ export default function TeamPage() {
       } else if (parsedThreePtPercentage < 30 && parsedThreePtAttemptsPerGame > 0.5) {
         status = "let-him-shoot";
       } else {
-        status = "unknown"; // Just in case
+        status = "unknown";
       }
       console.log(`Shooter status for ${player.full_name}: ${status}`)
       setShooterStatus(status)
@@ -173,7 +185,6 @@ export default function TeamPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-black" onClick={handleClick}>
       <div className="container mx-auto px-4 py-8">
-        {/* Header with back button */}
         <div className="flex items-center mb-8">
           <Link href="/">
             <Button variant="ghost" className="text-white hover:bg-white/20 mr-4">
@@ -188,17 +199,13 @@ export default function TeamPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Left side - Roster */}
           <div>
             <PlayerRoster team={team} onPlayerSelect={handlePlayerSelect} selectedPlayer={selectedPlayer} />
           </div>
 
-          {/* Right side - Stats */}
           <div className="space-y-6">
-            {/* Show Team Stats only when no player is selected */}
-            {!selectedPlayer && <TeamStats team={team} />}
+            {!selectedPlayer && <TeamStats team={team} netRank={netRank} />}
 
-            {/* Show Player Stats and Historical Chart when selected */}
             {selectedPlayer && (
               <>
                 {playerStats ? (

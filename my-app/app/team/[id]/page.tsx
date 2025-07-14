@@ -128,16 +128,16 @@ export default function TeamPage() {
       ) {
         status = "unknown";
         console.log(`Invalid stats for ${player.full_name}: parsedThreePtPercentage=${parsedThreePtPercentage}, parsedThreePtAttemptsPerGame=${parsedThreePtAttemptsPerGame}`);
-      } else if (parsedThreePtAttemptsPerGame <= 0.5) {
+      } else if (parsedThreePtAttemptsPerGame <= 0.2) {
         status = "unknown";
       } else if (parsedThreePtPercentage >= 37 && parsedThreePtAttemptsPerGame >= 2) {
         status = "lethal";
       } else if (
-        (parsedThreePtPercentage >= 30 && parsedThreePtPercentage < 37 && parsedThreePtAttemptsPerGame > 0.5) ||
+        (parsedThreePtPercentage >= 30 && parsedThreePtPercentage < 37 && parsedThreePtAttemptsPerGame > 0.2) ||
         (parsedThreePtPercentage >= 37 && parsedThreePtAttemptsPerGame < 2)
       ) {
         status = "fifty-fifty";
-      } else if (parsedThreePtPercentage < 30 && parsedThreePtAttemptsPerGame > 0.5) {
+      } else if (parsedThreePtPercentage < 30 && parsedThreePtAttemptsPerGame > 0.2) {
         status = "let-him-shoot";
       } else {
         status = "unknown";

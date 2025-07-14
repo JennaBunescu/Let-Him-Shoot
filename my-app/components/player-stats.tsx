@@ -13,11 +13,11 @@ interface PlayerStatsProps {
 
 export default function PlayerStats({ player, stats, teamStats }: PlayerStatsProps) {
   const shooterStatus: "lethal" | "fifty-fifty" | "let-him-shoot" | "unknown" = (() => {
-    if (stats.threePtAttemptsPerGame <= 0.5) {
+    if (stats.threePtAttemptsPerGame <= 0.2) {
       return "unknown";
     } else if (stats.threePtPercentage >= 37 && stats.threePtAttemptsPerGame >= 2) {
       return "lethal";
-    } else if ((stats.threePtPercentage >= 30 && stats.threePtPercentage < 37 && stats.threePtAttemptsPerGame > 0.5) || (stats.threePtPercentage >= 37 && stats.threePtAttemptsPerGame < 2) ) {
+    } else if ((stats.threePtPercentage >= 30 && stats.threePtPercentage < 37 && stats.threePtAttemptsPerGame > 0.2) || (stats.threePtPercentage >= 37 && stats.threePtAttemptsPerGame < 2) ) {
       return "fifty-fifty";
     }
     return "let-him-shoot";
